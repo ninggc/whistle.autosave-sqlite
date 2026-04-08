@@ -1,7 +1,7 @@
 {
-  "name": "whistle.autosave",
+  "name": "whistle.autosave-sqlite",
   "version": "0.1.0",
-  "description": "自动保存指定抓包数据到本地目录",
+  "description": "自动保存指定抓包数据到本地 SQLite 数据库",
   "main": "./lib",
   "scripts": {
     "lint": "eslint lib",
@@ -12,7 +12,8 @@
     "koa-bodyparser": "^4.2.1",
     "koa-onerror": "^4.1.0",
     "koa-router": "^7.4.0",
-    "koa-static": "^5.0.0"
+    "koa-static": "^5.0.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "babel-eslint": "^9.0.0",

@@ -139,8 +139,8 @@
       <button disabled id="update">更新配置</button>
     </header>
     <label class="form-control">
-      请输入本地存储目录(需确保该目录存在，插件不会自动创建):
-      <input id="sessionsDir" maxlength="3072" type="text" placeholder="请输入完整目录路径" />
+      请输入 SQLite 数据库文件路径(若文件不存在会自动创建，但所在目录需预先存在):
+      <input id="databasePath" maxlength="3072" type="text" placeholder="请输入完整 SQLite 文件路径，如 /data/autosave/sessions.sqlite" />
     </label>
     <label class="form-control">
       过滤条件(空表示匹配所有请求，否则只存储匹配的请求):
@@ -173,6 +173,8 @@
   <script src="jquery.js"></script>
   <script>
     ;(function() {
+      var activeBox;
+
       function showMessage(msg, success) {
         var tips = $('#tips');
         tips.text(msg);
@@ -191,15 +193,15 @@
         if (data.active) {
           $('#active')[0].checked = true;
         }
-        if (data.sessionsDir) {
-          $('#sessionsDir').val(data.sessionsDir);
+        if (data.databasePath) {
+          $('#databasePath').val(data.databasePath);
         }
         if (data.filterText) {
           $('#filterText').val(data.filterText);
         }
 
         var pendingActive;
-        var activeBox = $('#active').on('change', ({ target }) => {
+        activeBox = $('#active').on('change', ({ target }) => {
           var { checked } = target;
           if (pendingActive) {
             target.checked = !checked;
@@ -219,50 +221,54 @@
               pendingActive = false;
               showMessage('提交失败，请稍后重试！');
             }
+          });
         });
-      });
-      var btn = $('#update');
-      $('#sessionsDir,#filterText').on('input', function(){
-         btn[0].disabled = false;
-      });
-      btn.click(function() {
-        btn[0].disabled = true;
-        $.post({
-          url: 'cgi-bin/set-settings',
+
+        var btn = $('#update');
+        $('#databasePath,#filterText').on('input', function() {
+          btn[0].disabled = false;
+        });
+        btn.click(function() {
+          btn[0].disabled = true;
+          var databasePath = $('#databasePath').val().trim();
+          $.post({
+            url: 'cgi-bin/set-settings',
+            dataType: 'json',
+            data: {
+              databasePath: databasePath,
+              filterText: $('#filterText').val().trim()
+            },
+            success: function(data) {
+              if (data.ec) {
+                btn[0].disabled = false;
+                return showMessage(data.em);
+              }
+              showMessage('更新配置成功', true);
+              if (databasePath && !activeBox[0].checked && window.confirm('是否启用自动保存抓包数据？')) {
+                activeBox.trigger('click');
+              }
+            },
+            error: function() {
+              btn[0].disabled = false;
+              showMessage('提交失败，请稍后重试！');
+            }
+          });
+        });
+      }
+
+      function init() {
+        $.get({
+          url: 'cgi-bin/get-settings',
           dataType: 'json',
-          data: {
-            sessionsDir: $('#sessionsDir').val().trim(),
-            filterText: $('#filterText').val().trim()
-          },
-          success: function(data) {
-            if (data.ec) {
-              return showMessage(data.em);
-            }
-            showMessage('更新配置成功', true);
-            if (sessionsDir && !activeBox[0].checked && window.confirm('是否启用自动保存抓包数据？')) {
-              activeBox.trigger('click');
-            }
-          },
+          success: initUI,
           error: function() {
-            btn[0].disabled = false;
-            showMessage('提交失败，请稍后重试！');
+            setTimeout(init, 1000);
           }
         });
-      });
-    }
+      }
 
-    function init() {
-      $.get({
-        url: 'cgi-bin/get-settings',
-        dataType: 'json',
-        success: initUI,
-        error: function() {
-          setTimeout(init, 1000);
-        }
-      });
-    }
-    init();
-  })();
+      init();
+    })();
   </script>
 </body>
 </html>
