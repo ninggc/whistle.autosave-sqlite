@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm list *)",
+      "Bash(npm root *)",
+      "Bash(npm ls *)",
+      "Bash(node *)",
+      "Bash(whistle run *)",
+      "Bash(curl -s http://127.0.0.1:8899/cgi-bin/plugins)",
+      "Bash(kill %1)",
+      "Bash(curl -s http://127.0.0.1:8899/cgi-bin/get-custom-files)",
+      "Read(//Users/louis.ning/**)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(NODE_PATH=/Users/louis.ning/.nvm/versions/node/v24.13.0/lib/node_modules node -e \"console.log\\(Object.keys\\(require\\('whistle.autosave-sqlite'\\)\\)\\)\")",
+      "Bash(npm unlink *)",
+      "Bash(rm -f /Users/louis.ning/.nvm/versions/node/v24.13.0/lib/node_modules/whistle.autosave)",
+      "Bash(mkdir -p /Users/louis.ning/.WhistleAppData/custom_plugins)",
+      "Bash(ln -sf /Users/louis.ning/project/my/whistle.autosave-sqlite /Users/louis.ning/.WhistleAppData/custom_plugins/whistle.autosave-sqlite)",
+      "Bash(w2 restart *)",
+      "Bash(chmod +x *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git *)",
+      "Bash(multica --help)",
+      "Bash(multica skill *)",
+      "Bash(multica workspace *)"
+    ]
+  }
+}

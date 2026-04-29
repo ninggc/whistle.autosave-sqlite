@@ -1,42 +1,65 @@
 # whistle.autosave-sqlite
 该 whistle 插件主要用于自动保存抓包数据到本地 SQLite 数据库文件。
 
-### 安装
-1. 该应用是 whistle 插件，需要先安装 whistle：[https://github.com/avwo/whistle](https://github.com/avwo/whistle)
-    ```
-    npm i -g whistle
-    ```
-2. 全局安装本插件：
-    ```
-    npm i -g whistle.autosave-sqlite
-    ```
-    > 推荐使用镜像：`npm i -g whistle.autosave-sqlite --registry=https://registry.npmmirror.com`
-3. 启动 whistle：
-    ```
+### 前置依赖
+
+该应用是 whistle 插件，需要先安装 whistle：
+
+```bash
+# 检查是否已安装
+w2 -V
+
+# 如果提示 command not found，先安装 whistle
+npm i -g whistle
+```
+
+### 安装方式
+
+#### 方式 1：从 npm 安装（推荐，已发布到 npm 时使用）
+
+```bash
+npm i -g whistle.autosave-sqlite
+```
+> 国内推荐使用镜像：`npm i -g whistle.autosave-sqlite --registry=https://registry.npmmirror.com`
+
+#### 方式 2：从 Git 仓库安装
+
+```bash
+npm i -g git+https://github.com/<用户名>/whistle.autosave-sqlite.git
+```
+
+#### 方式 3：离线 tarball 安装
+
+先在已构建好的机器上打包：
+```bash
+npm pack
+# 生成 whistle.autosave-sqlite-0.1.0.tgz
+```
+将 `.tgz` 文件发送到目标机器，然后安装：
+```bash
+npm i -g ./whistle.autosave-sqlite-0.1.0.tgz
+```
+
+#### 方式 4：复制源码 + npm link（开发协作）
+
+将项目文件夹复制到目标机器，然后：
+```bash
+cd whistle.autosave-sqlite
+npm install
+npm link
+```
+
+### 启动插件
+
+1. 启动 whistle：
+    ```bash
     w2 start
     ```
-4. 打开 whistle 管理页面，一般是 [http://127.0.0.1:8899](http://127.0.0.1:8899)
-5. 在插件列表中找到 `autosave-sqlite`，进入配置页面：
+2. 打开 whistle 管理页面，一般是 [http://127.0.0.1:8899](http://127.0.0.1:8899)
+3. 在插件列表中找到 `autosave-sqlite`，进入配置页面：
     ![autosave插件管理界面](https://user-images.githubusercontent.com/11450939/51109605-a9eeb100-1830-11e9-985c-34d1e1b8ee88.gif)
 
-### 本地源码安装到 whistle
-
-如果你要在本地修改这个仓库并立即挂到 whistle 里调试，推荐用 `npm link`：
-
-1. 在项目根目录执行：
-    ```bash
-    npm install
-    npm link
-    ```
-2. 确保 whistle 已安装并已启动：
-    ```bash
-    w2 start
-    ```
-3. whistle 会自动加载全局 link 的 `whistle.*` 插件包；如果插件列表没有立即刷新，可执行：
-    ```bash
-    w2 restart
-    ```
-4. 打开 whistle 管理页面，在插件列表中找到 `autosave-sqlite`
+> 如果 whistle 已运行，安装插件后执行 `w2 restart` 刷新插件列表。
 
 ### 使用方式
 
