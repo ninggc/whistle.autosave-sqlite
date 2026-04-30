@@ -15,6 +15,24 @@ npm i -g whistle
 
 ### 安装方式
 
+#### 方式 0：一键安装并初始化浏览器代理（推荐）
+
+如果你希望直接完成 `whistle`、插件、ZeroOmega 与代理配置初始化，可以执行：
+
+```bash
+curl -fsSL 'https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/setup-all-20260430-1846.sh' | bash -s -- --db "$HOME/whistle/data.sqlite"
+```
+
+说明：
+
+- `--db` 用于指定 SQLite 数据库文件路径
+- 如果本机缺少 `node` / `npm`，脚本会尝试通过 `brew install node` 自动安装
+- 脚本会自动安装/启动 `whistle`
+- 脚本会自动安装 `whistle.autosave-sqlite`
+- 脚本会自动下载 ZeroOmega、导入预设配置并启动受管浏览器 Profile
+
+如需更换数据库路径，只需要替换 `--db` 后面的值即可。
+
 #### 方式 1：从 npm 安装（推荐，已发布到 npm 时使用）
 
 ```bash

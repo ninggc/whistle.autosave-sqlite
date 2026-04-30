@@ -1,5 +1,23 @@
 # 安装指南
 
+## 0. 一键安装并初始化浏览器代理（推荐）
+
+如果目标机器已经安装 `Node.js` / `npm`，可以直接执行：
+
+```bash
+curl -fsSL 'https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/setup-all-20260430-1846.sh' | bash -s -- --db "$HOME/whistle/data.sqlite"
+```
+
+说明：
+
+- `--db` 用于指定 SQLite 数据库文件路径
+- 如果本机缺少 `node` / `npm`，脚本会尝试通过 `brew install node` 自动安装
+- 脚本会自动安装/启动 `whistle`
+- 脚本会自动安装 `whistle.autosave-sqlite`
+- 脚本会自动下载 ZeroOmega、导入预设配置并启动受管浏览器 Profile
+
+如果本机也没有 `brew`，请先安装 Homebrew 后再执行上面的命令。
+
 ## 1. 安装 whistle
 
 ```bash
