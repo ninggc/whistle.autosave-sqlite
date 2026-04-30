@@ -20,13 +20,13 @@ npm i -g whistle
 如果你希望直接完成 `whistle`、插件、ZeroOmega 与代理配置初始化，可以执行：
 
 ```bash
-curl -fsSL 'https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/setup-all-20260430-1846.sh' | bash -s -- --db "$HOME/whistle/data.sqlite"
+curl -fsSL 'https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/setup-all-20260430-1901.sh' | bash -s -- --db "$HOME/whistle/data.sqlite"
 ```
 
 说明：
 
 - `--db` 用于指定 SQLite 数据库文件路径
-- 如果本机缺少 `node` / `npm`，脚本会尝试通过 `brew install node` 自动安装
+- 如果本机缺少 `node` / `npm`，或当前 Node 版本过高，脚本会尝试通过 `brew install node@20` 自动安装并切换到兼容版本
 - 脚本会自动安装/启动 `whistle`
 - 脚本会自动安装 `whistle.autosave-sqlite`
 - 脚本会自动下载 ZeroOmega、导入预设配置并启动受管浏览器 Profile

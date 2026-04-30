@@ -11,6 +11,8 @@ PLUGIN_TGZ_URL="https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/publ
 ZEROOMEGA_CRX_URL="https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/zeroomega-3.4.5.crx"
 ZEROOMEGA_BACKUP_URL="https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/ZeroOmegaOptions-2026-04-30T08_16_39.687Z.bak"
 DB_PATH=""
+NODE_MIN_MAJOR=18
+NODE_MAX_MAJOR=20
 
 CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}/whistle-autosave-sqlite"
 ZEROOMEGA_ROOT="$CACHE_ROOT/zeroomega"
@@ -20,6 +22,8 @@ ZEROOMEGA_EXT_DIR="$ZEROOMEGA_ROOT/extension"
 ZEROOMEGA_PROFILE_DIR="$ZEROOMEGA_ROOT/chrome-profile"
 PLAYWRIGHT_ROOT="$CACHE_ROOT/playwright"
 PLAYWRIGHT_PKG_DIR="$PLAYWRIGHT_ROOT/pkg"
+PLAYWRIGHT_BIN_DIR="$PLAYWRIGHT_PKG_DIR/node_modules/.bin"
+PLAYWRIGHT_CHROMIUM_PATH="$HOME/Library/Caches/ms-playwright/chromium-1181/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
 LAUNCHER_PATH="$CACHE_ROOT/run-zeroomega-chrome.sh"
 
 CHROME_CANDIDATES=(
@@ -87,14 +91,40 @@ EOF
   exit 1
 }
 
+prepend_node20_path() {
+  local candidates=(
+    "/opt/homebrew/opt/node@20/bin"
+    "/usr/local/opt/node@20/bin"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -x "$candidate/node" && -x "$candidate/npm" ]]; then
+      export PATH="$candidate:$PATH"
+      return 0
+    fi
+  done
+  return 1
+}
+
+node_major_version() {
+  node -p 'process.versions.node.split(".")[0]'
+}
+
 ensure_node_runtime() {
   if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
-    return 0
+    local major
+    major="$(node_major_version)"
+    if (( major >= NODE_MIN_MAJOR && major <= NODE_MAX_MAJOR )); then
+      return 0
+    fi
+
+    log "Detected Node.js v$major; sqlite3 installs are more reliable on Node.js 18-20"
   fi
 
   ensure_homebrew
-  log "Installing Node.js via Homebrew"
-  brew install node
+  log "Installing Node.js 20 via Homebrew"
+  brew install node@20
+  prepend_node20_path || true
 
   if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
     cat >&2 <<'EOF'
@@ -105,6 +135,18 @@ Try running one of these commands, then rerun the script:
 EOF
     exit 1
   fi
+
+  local major
+  major="$(node_major_version)"
+  if (( major < NODE_MIN_MAJOR || major > NODE_MAX_MAJOR )); then
+    cat >&2 <<'EOF'
+This script needs Node.js 18-20 for the current sqlite3 dependency.
+Please ensure `node@20` is ahead of other Node installations in PATH, then rerun.
+EOF
+    exit 1
+  fi
+
+  log "Using Node.js $(node -v) and npm $(npm -v)"
 }
 
 detect_browser() {
@@ -198,6 +240,18 @@ ensure_playwright() {
   else
     log "Playwright runtime already prepared"
   fi
+
+  if [[ ! -x "$PLAYWRIGHT_BIN_DIR/playwright" ]]; then
+    echo "Playwright CLI not found after installation" >&2
+    exit 1
+  fi
+
+  if [[ ! -x "$PLAYWRIGHT_CHROMIUM_PATH" ]]; then
+    log "Installing Playwright Chromium browser"
+    "$PLAYWRIGHT_BIN_DIR/playwright" install chromium
+  else
+    log "Playwright Chromium browser already prepared"
+  fi
 }
 
 create_launcher() {
@@ -209,6 +263,11 @@ set -euo pipefail
 ZEROOMEGA_EXT_DIR="$ZEROOMEGA_EXT_DIR"
 ZEROOMEGA_PROFILE_DIR="$ZEROOMEGA_PROFILE_DIR"
 BROWSER_BIN="\${BROWSER_BIN:-$browser_bin}"
+PLAYWRIGHT_CHROMIUM_PATH="$PLAYWRIGHT_CHROMIUM_PATH"
+
+if [[ -x "\$PLAYWRIGHT_CHROMIUM_PATH" ]]; then
+  BROWSER_BIN="\$PLAYWRIGHT_CHROMIUM_PATH"
+fi
 
 exec "\$BROWSER_BIN" \
   --user-data-dir="\$ZEROOMEGA_PROFILE_DIR" \
@@ -241,7 +300,7 @@ async function main() {
 
   const { chromium } = require(path.join(playwrightPkgDir, 'node_modules/playwright'));
   const context = await chromium.launchPersistentContext(profileDir, {
-    executablePath: browserBin,
+    channel: 'chromium',
     headless: false,
     args: [
       `--disable-extensions-except=${extensionDir}`,

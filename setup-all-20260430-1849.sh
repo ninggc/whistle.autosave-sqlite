@@ -11,6 +11,8 @@ PLUGIN_TGZ_URL="https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/publ
 ZEROOMEGA_CRX_URL="https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/zeroomega-3.4.5.crx"
 ZEROOMEGA_BACKUP_URL="https://oss-fx-int.nioint.com/fx/pdd-platform-front/__cdn__/public/ZeroOmegaOptions-2026-04-30T08_16_39.687Z.bak"
 DB_PATH=""
+NODE_MIN_MAJOR=18
+NODE_MAX_MAJOR=20
 
 CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}/whistle-autosave-sqlite"
 ZEROOMEGA_ROOT="$CACHE_ROOT/zeroomega"
@@ -87,14 +89,40 @@ EOF
   exit 1
 }
 
+prepend_node20_path() {
+  local candidates=(
+    "/opt/homebrew/opt/node@20/bin"
+    "/usr/local/opt/node@20/bin"
+  )
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -x "$candidate/node" && -x "$candidate/npm" ]]; then
+      export PATH="$candidate:$PATH"
+      return 0
+    fi
+  done
+  return 1
+}
+
+node_major_version() {
+  node -p 'process.versions.node.split(".")[0]'
+}
+
 ensure_node_runtime() {
   if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
-    return 0
+    local major
+    major="$(node_major_version)"
+    if (( major >= NODE_MIN_MAJOR && major <= NODE_MAX_MAJOR )); then
+      return 0
+    fi
+
+    log "Detected Node.js v$major; sqlite3 installs are more reliable on Node.js 18-20"
   fi
 
   ensure_homebrew
-  log "Installing Node.js via Homebrew"
-  brew install node
+  log "Installing Node.js 20 via Homebrew"
+  brew install node@20
+  prepend_node20_path || true
 
   if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
     cat >&2 <<'EOF'
@@ -105,6 +133,18 @@ Try running one of these commands, then rerun the script:
 EOF
     exit 1
   fi
+
+  local major
+  major="$(node_major_version)"
+  if (( major < NODE_MIN_MAJOR || major > NODE_MAX_MAJOR )); then
+    cat >&2 <<'EOF'
+This script needs Node.js 18-20 for the current sqlite3 dependency.
+Please ensure `node@20` is ahead of other Node installations in PATH, then rerun.
+EOF
+    exit 1
+  fi
+
+  log "Using Node.js $(node -v) and npm $(npm -v)"
 }
 
 detect_browser() {
