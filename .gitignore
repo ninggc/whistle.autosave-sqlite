@@ -63,3 +63,6 @@ typings/
 .console.log
 
 /data
+
+.tgz
+.crx

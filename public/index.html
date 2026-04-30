@@ -12,7 +12,7 @@
       padding: 0;
       margin: 0;
     }
-    input, textarea {
+    input, textarea, select {
       font-family: "Helvetica Neue", Helvetica, Tahoma, Arial, "Microsoft Yahei", 微软雅黑, "Hiragino Sans GB", "PingFang SC", STHeiTi, sans-serif;
       font-size: 14px;
     }
@@ -20,9 +20,9 @@
       box-sizing: border-box;
     }
     #root {
-      width:800px;
+      width: 800px;
       margin: 0 auto;
-      padding-bottom: 100px;
+      padding: 0 0 100px;
       display: none;
     }
     a {
@@ -32,15 +32,15 @@
     label {
       display: block;
     }
-    label input[type=text], label textarea {
+    label input[type=text], label input[type=number], label textarea, label select {
       display: block;
       width: 100%;
-      height: 34px;
+      min-height: 34px;
       padding: 0 12px;
       font-size: 14px;
       line-height: 1.42857143;
       color: #555;
-      background-color: #fff;
+      background-color: lightyellow;
       background-image: none;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -50,12 +50,14 @@
       -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
       transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
       margin-top: 8px;
-      background-color: lightyellow;
     }
-    label textarea {
-      resize: none;
-      height: 200px;
-      padding: 5px 10px;
+    label textarea, .json-box {
+      resize: vertical;
+      min-height: 120px;
+      padding: 8px 10px;
+    }
+    #filterText {
+      min-height: 200px;
     }
     header {
       line-height: 50px;
@@ -105,12 +107,10 @@
       background-color: #d9534f;
       border-radius: 3px;
       color: #fff;
+      z-index: 10;
     }
     #tips.success {
       background: #5cb85c;
-    }
-    #tips.warn {
-      background: lightyellow;
     }
     .form-control {
       margin-top: 36px;
@@ -119,12 +119,120 @@
     .desc {
       margin-top: 10px;
     }
+    .field-desc {
+      margin-top: 8px;
+      color: #666;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 1.6;
+    }
+    .scene-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-top: 36px;
+    }
+    .scene-row--top {
+      margin-top: 24px;
+    }
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .action-row button {
+      float: none;
+      margin: 0;
+    }
+    .scene-row label {
+      flex: 1;
+      margin: 0;
+    }
+    .field-grid {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      margin-top: 24px;
+    }
+    .field-grid .form-control {
+      flex: 1;
+      margin-top: 0;
+    }
+    .field-grid textarea {
+      min-height: 34px;
+      height: 34px;
+      resize: none;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+    .toolbar-card {
+      margin-top: 24px;
+      padding: 18px 20px;
+      border: 1px solid #d9e5f2;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f8fbff 0%, #eef5fb 100%);
+      box-shadow: 0 8px 24px rgba(51, 122, 183, 0.08);
+    }
+    .toolbar-title {
+      font-size: 13px;
+      color: #4f6b84;
+      margin-bottom: 10px;
+      font-weight: bold;
+      letter-spacing: 0.4px;
+    }
+    .toolbar-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .toolbar-row label {
+      flex: 1;
+      margin: 0;
+      font-weight: bold;
+    }
+    .toolbar-meta {
+      margin-top: 8px;
+      color: #5f7181;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .settings-grid {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .settings-grid .form-control {
+      flex: 1;
+      margin-top: 36px;
+    }
+    .divider {
+      margin: 32px 0 0;
+      border: 0;
+      border-top: 1px solid #ddd;
+    }
+    @media (max-width: 820px) {
+      #root {
+        width: auto;
+        padding: 0 16px 100px;
+      }
+      .field-grid,
+      .toolbar-row,
+      .settings-grid {
+        display: block;
+      }
+      .field-grid .form-control + .form-control,
+      .settings-grid .form-control + .form-control {
+        margin-top: 24px;
+      }
+      .toolbar-row label + label {
+        margin-top: 16px;
+      }
+    }
     pre {
       margin: 10px 0;
-      padding: 0;
+      padding: 13px 0 0;
       font-family: consola;
       background: #eee;
-      padding-top: 13px;
     }
   </style>
 </head>
@@ -138,10 +246,55 @@
       </label>
       <button disabled id="update">更新配置</button>
     </header>
+    <div class="toolbar-card">
+      <div class="toolbar-title">测试场景工具条</div>
+      <div class="toolbar-row">
+        <label>
+          快速切换场景:
+          <select id="sceneSelector">
+            <option value="">请选择已配置的场景</option>
+          </select>
+        </label>
+      </div>
+      <div class="toolbar-meta">选择后会自动回填并保存当前场景和描述，适合测试过程中快速切换。</div>
+    </div>
+    <div class="field-grid">
+      <label class="form-control">
+        当前测试场景:
+        <input id="scene" maxlength="256" type="text" placeholder="例如：登录、下单、支付回调" />
+        <div class="field-desc">该值会保存到 SQLite 的 <strong>scene</strong> 字段，用于标记后续抓到的流量。</div>
+      </label>
+      <label class="form-control">
+        当前场景描述:
+        <textarea id="description" maxlength="1024" placeholder="例如：短信验证码登录，账号为 test01"></textarea>
+        <div class="field-desc">该值会保存到 SQLite 的 <strong>description</strong> 字段，方便后续分析。</div>
+      </label>
+    </div>
+    <hr class="divider" />
     <label class="form-control">
       请输入 SQLite 数据库文件路径(若文件不存在会自动创建，但所在目录需预先存在):
       <input id="databasePath" maxlength="3072" type="text" placeholder="请输入完整 SQLite 文件路径，如 /data/autosave/sessions.sqlite" />
     </label>
+    <div class="settings-grid">
+      <label class="form-control">
+        自动备份阈值(MB):
+        <input id="maxDbSizeMB" min="1" max="10240" type="number" placeholder="默认 100" />
+        <div class="field-desc">当 SQLite 文件超过该大小后，会先重命名备份旧文件，再创建新的同名数据库继续写入。</div>
+      </label>
+      <label class="form-control">
+        场景 JSON 配置:
+        <textarea id="sceneMappings" class="json-box" maxlength="3072" placeholder='请输入 JSON，例如：
+[
+  {"登录": "短信验证码登录"},
+  {"创建": "创建一条新记录"}
+]'></textarea>
+        <div class="field-desc">支持格式 <strong>[{"场景": "描述"}]</strong>。可先参考默认示例：登录、创建、编辑、删除。选择上方场景后会自动应用并保存。</div>
+        <div class="action-row">
+          <button id="fillDefaultScenes" type="button">填充默认示例</button>
+          <button id="clearSceneMappings" type="button">清空 JSON</button>
+        </div>
+      </label>
+    </div>
     <label class="form-control">
       过滤条件(空表示匹配所有请求，否则只存储匹配的请求):
       <textarea id="filterText" maxlength="3072" placeholder="请输入过滤条件，具体规则见下面的说明"></textarea>
@@ -174,6 +327,14 @@
   <script>
     ;(function() {
       var activeBox;
+      var sceneList = [];
+      var defaultSceneMappings = [
+        {"登录": "短信验证码登录"},
+        {"创建": "创建一条新记录"},
+        {"编辑": "编辑已有记录"},
+        {"删除": "删除指定记录"}
+      ];
+      var formSelector = '#databasePath,#scene,#description,#sceneMappings,#filterText,#maxDbSizeMB';
 
       function showMessage(msg, success) {
         var tips = $('#tips');
@@ -188,6 +349,164 @@
         tips.delay(2000).fadeOut(1600);
       }
 
+      function setDirty() {
+        $('#update')[0].disabled = false;
+      }
+
+      function collectFormData() {
+        return {
+          databasePath: $('#databasePath').val().trim(),
+          scene: $('#scene').val().trim(),
+          description: $('#description').val().trim(),
+          sceneMappings: $('#sceneMappings').val().trim(),
+          filterText: $('#filterText').val().trim(),
+          maxDbSizeMB: $('#maxDbSizeMB').val().trim()
+        };
+      }
+
+      function parseSceneMappings(text) {
+        text = (text || '').trim();
+        if (!text) {
+          return [];
+        }
+
+        var data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          return null;
+        }
+        if (!Array.isArray(data)) {
+          return null;
+        }
+
+        var list = [];
+        for (var i = 0; i < data.length; i++) {
+          var item = data[i];
+          if (!item || typeof item !== 'object' || Array.isArray(item)) {
+            return null;
+          }
+          var keys = Object.keys(item);
+          if (keys.length !== 1) {
+            return null;
+          }
+          var scene = $.trim(keys[0]);
+          var description = item[keys[0]];
+          if (!scene || typeof description !== 'string') {
+            return null;
+          }
+          list.push({
+            scene: scene,
+            description: description
+          });
+        }
+        return list;
+      }
+
+      function getDefaultSceneMappingsText() {
+        return JSON.stringify(defaultSceneMappings, null, 2);
+      }
+
+      function updateSceneMappings(text, options) {
+        var list = parseSceneMappings(text);
+        if (!list) {
+          return false;
+        }
+        sceneList = list;
+        $('#sceneMappings').val(text);
+        renderSceneSelector();
+        if (!options || !options.skipSync) {
+          syncSceneSelector();
+        }
+        setDirty();
+        return true;
+      }
+
+      function renderSceneSelector() {
+        var selector = $('#sceneSelector');
+        var html = ['<option value="">请选择已配置的场景</option>'];
+        sceneList.forEach(function(item, index) {
+          html.push('<option value="' + index + '">' + item.scene + '</option>');
+        });
+        selector.html(html.join(''));
+      }
+
+      function syncSceneSelector() {
+        var currentScene = $('#scene').val().trim();
+        var currentDescription = $('#description').val().trim();
+        var matchedIndex = '';
+        sceneList.some(function(item, index) {
+          if (item.scene === currentScene && item.description === currentDescription) {
+            matchedIndex = String(index);
+            return true;
+          }
+        });
+        $('#sceneSelector').val(matchedIndex);
+      }
+
+      function saveSettings(data, options) {
+        var btn = $('#update');
+        var sceneMappingsText = data.sceneMappings;
+        var parsedSceneList = parseSceneMappings(sceneMappingsText);
+        if (sceneMappingsText && !parsedSceneList) {
+          if (!options || !options.silent) {
+            showMessage('场景 JSON 格式不合法，请使用 [{"场景": "描述"}]');
+          }
+          return $.Deferred().reject({ ec: 1, em: '场景 JSON 格式不合法' }).promise();
+        }
+
+        btn[0].disabled = true;
+        return $.post({
+          url: 'cgi-bin/set-settings',
+          dataType: 'json',
+          data: data
+        }).then(function(response) {
+          if (response.ec) {
+            btn[0].disabled = false;
+            if (!options || !options.silent) {
+              showMessage(response.em);
+            }
+            return $.Deferred().reject(response).promise();
+          }
+          sceneList = parsedSceneList || [];
+          renderSceneSelector();
+          syncSceneSelector();
+          $('#maxDbSizeMB').val(response.maxDbSizeMB || '100');
+          if (!options || !options.skipSuccessMessage) {
+            showMessage(options && options.successMessage ? options.successMessage : '更新配置成功', true);
+          }
+          return response;
+        }, function() {
+          btn[0].disabled = false;
+          if (!options || !options.silent) {
+            showMessage('提交失败，请稍后重试！');
+          }
+          return $.Deferred().reject({ ec: 2, em: '提交失败，请稍后重试！' }).promise();
+        });
+      }
+
+      function applySceneSelection(autoSave) {
+        var value = $('#sceneSelector').val();
+        if (value === '') {
+          return showMessage('请先选择一个场景');
+        }
+        var item = sceneList[Number(value)];
+        if (!item) {
+          return showMessage('未找到对应的场景配置');
+        }
+        $('#scene').val(item.scene);
+        $('#description').val(item.description);
+        setDirty();
+        if (!autoSave) {
+          showMessage('已应用场景', true);
+          return;
+        }
+        saveSettings(collectFormData(), {
+          successMessage: '已切换并保存场景',
+          silent: false
+        });
+      }
+
       function initUI(data) {
         $('#root').show();
         if (data.active) {
@@ -196,13 +515,28 @@
         if (data.databasePath) {
           $('#databasePath').val(data.databasePath);
         }
+        if (data.scene) {
+          $('#scene').val(data.scene);
+        }
+        if (data.description) {
+          $('#description').val(data.description);
+        }
+        if (data.sceneMappings) {
+          $('#sceneMappings').val(data.sceneMappings);
+        }
         if (data.filterText) {
           $('#filterText').val(data.filterText);
         }
+        $('#maxDbSizeMB').val(data.maxDbSizeMB || '100');
+
+        sceneList = parseSceneMappings($('#sceneMappings').val()) || [];
+        renderSceneSelector();
+        syncSceneSelector();
 
         var pendingActive;
-        activeBox = $('#active').on('change', ({ target }) => {
-          var { checked } = target;
+        activeBox = $('#active').on('change', function(event) {
+          var target = event.target;
+          var checked = target.checked;
           if (pendingActive) {
             target.checked = !checked;
             return;
@@ -224,33 +558,50 @@
           });
         });
 
-        var btn = $('#update');
-        $('#databasePath,#filterText').on('input', function() {
-          btn[0].disabled = false;
+        $(formSelector).on('input', function() {
+          if (this.id === 'sceneMappings') {
+            var list = parseSceneMappings(this.value);
+            if (list) {
+              sceneList = list;
+              renderSceneSelector();
+              syncSceneSelector();
+            }
+          }
+          if (this.id === 'scene' || this.id === 'description') {
+            syncSceneSelector();
+          }
+          setDirty();
         });
-        btn.click(function() {
-          btn[0].disabled = true;
-          var databasePath = $('#databasePath').val().trim();
-          $.post({
-            url: 'cgi-bin/set-settings',
-            dataType: 'json',
-            data: {
-              databasePath: databasePath,
-              filterText: $('#filterText').val().trim()
-            },
-            success: function(data) {
-              if (data.ec) {
-                btn[0].disabled = false;
-                return showMessage(data.em);
-              }
-              showMessage('更新配置成功', true);
-              if (databasePath && !activeBox[0].checked && window.confirm('是否启用自动保存抓包数据？')) {
-                activeBox.trigger('click');
-              }
-            },
-            error: function() {
-              btn[0].disabled = false;
-              showMessage('提交失败，请稍后重试！');
+
+        $('#fillDefaultScenes').click(function() {
+          updateSceneMappings(getDefaultSceneMappingsText());
+          showMessage('已填充默认场景示例，可点击“更新配置”保存', true);
+        });
+
+        $('#clearSceneMappings').click(function() {
+          sceneList = [];
+          $('#sceneMappings').val('');
+          renderSceneSelector();
+          syncSceneSelector();
+          setDirty();
+          showMessage('已清空场景 JSON，可点击“更新配置”保存', true);
+        });
+
+        $('#sceneSelector').on('change', function() {
+          var value = $(this).val();
+          if (value === '') {
+            return;
+          }
+          applySceneSelection(true);
+        });
+
+        $('#update').click(function() {
+          var formData = collectFormData();
+          saveSettings(formData, {
+            successMessage: '更新配置成功'
+          }).then(function() {
+            if (formData.databasePath && !activeBox[0].checked && window.confirm('是否启用自动保存抓包数据？')) {
+              activeBox.trigger('click');
             }
           });
         });
